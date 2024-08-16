@@ -1,0 +1,224 @@
+﻿@model CardgameServer.game.truco.TrucoGameModel;
+@using CardgameServer.player;
+@using CardgameServer.cards;
+@using CardgameServer.game.truco;
+
+@{
+    ViewData["Title"] = "Truco - Index";
+}
+
+<head>
+    <meta http-equiv="refresh" content="2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+
+    @if (Model.IsAcceptingPlayers)
+    {
+        <p>Waiting for players to join...</p>
+        <ul>
+            @foreach (Player player in Model.Players.Values)
+            {
+                <li>@player.Name</li>
+            }
+        </ul>
+    }
+    else
+    {
+        Dictionary<long, Card> roundCards = Model.RoundCards != null
+            ? (Model.RoundCards.Count > 0 ? Model.RoundCards : Model.LastRound)
+            : [];
+
+        <table bgcolor ="gray" boder="1" width="100%">
+            <tr>
+                <td align="right">
+                    @foreach (long pId in Model.Teams.GetValueOrDefault(Team.TeamOne, []))
+                    {
+                        <p>@Model.Players[pId].Name</p>
+                    }
+                </td>
+                <td align="center">
+                    <h1>@Model.Scores.GetValueOrDefault(Team.TeamOne, 0)</h1>
+                </td>
+                <td width="50">
+                    @{
+                        string? pointsThisRound = null;
+                        if (Model.PointsThisRound == 3) {
+                            pointsThisRound = "TRUCO";
+                        } else if (Model.PointsThisRound == 6) {
+                            pointsThisRound = "SEIS!";
+                        } else if (Model.PointsThisRound == 9) {
+                            pointsThisRound = "NOVE!";
+                        } else if (Model.PointsThisRound == 12) {
+                            pointsThisRound = "DOZE!";
+                        }
+                        if (pointsThisRound != null) {
+                            <button class="btn danger">@pointsThisRound</button>
+                        }
+                    }
+                </td>
+                <td align="center">
+                    <h1>@Model.Scores.GetValueOrDefault(Team.TeamTwo, 0)</h1>
+                </td>
+                <td align="left">
+                    @foreach (long pId in Model.Teams.GetValueOrDefault(Team.TeamTwo, []))
+                    {
+                        <p>@Model.Players[pId].Name</p>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td align="right">
+                    @for (int i = 0; i < Model.Round; i++) {
+                        if (Team.TeamOne == Model.DealWinners[i])
+                        {
+                            <img src="/img/win.png" height="15" width="15"/>
+                        }
+                        else if (Model.DealWinners[i] == null)
+                        {
+                            <img src="/img/draw.png" height="15" width="15" />
+                        }
+                    }
+                </td>
+                <td/>
+                <td/>
+                <td align="right">
+                    @for (int i = 0; i < Model.Round; i++) {
+                        if (Team.TeamTwo == Model.DealWinners[i])
+                        {
+                            <img src="/img/win.png" height="15" width="15" />
+                        } else if (Model.DealWinners[i] == null) 
+                        {
+                            <img src="/img/draw.png" height="15" width="15" />
+                        }
+                    }
+                </td>
+            </tr>
+        </table>
+
+        <table bgcolor="lightgreen" width="100%">
+            <tr>
+                @{
+                    string[] alignment = ["right", "center", "left"];
+                }
+                @for (int i = 0; i < 3; i++) {
+                    int rowSpan = i == 1 ? 1 : 2;
+                    <td rowspan=@rowSpan valign="center" align=@alignment[i]>
+                        @{
+                            Player thisPlayer = Model.Players[Model.RelativeSeating[i]];
+                        }
+                        <div>
+                            @if (Model.RaisePlayer == thisPlayer.Id) {
+                                string raisedTo = "TRUCO!";
+                                if (Model.RaisedTo == 6) {
+                                    raisedTo = "SEIS!";
+                                }
+                                else if (Model.RaisedTo == 9) {
+                                    raisedTo = "NOVE!";
+                                }
+                                else if (Model.RaisedTo == 12) {
+                                    raisedTo = "DOZE!";
+                                }
+                                <button class="btn danger">@raisedTo</button>
+                            }
+                            @if (Model.Teams.GetValueOrDefault(Model.TeamFolded, []).Contains(thisPlayer.Id)) {
+                                <button class="btn danger">DESISTO</button>
+                            }
+                            @if (Model.ActivePlayer == thisPlayer.Id) {
+                                <img src="/img/thinking.png" height="30" width="30"/>
+                            }
+                            @thisPlayer.Name
+                            @for (int j = 0; j < Model.HandSizes.GetValueOrDefault(thisPlayer.Id, 0); j++) {
+                                <img src="/img/cardback_1_128_178.png" width="20" height="30" />
+                            }
+                        </div>
+                        @if (roundCards.ContainsKey(thisPlayer.Id)) {
+                            Card card = roundCards[thisPlayer.Id];
+                            string cardImage = string.Format("/img/card_{0}_{1}.png", card.Suit, card.Value);
+                            <img src=@cardImage class="img" />
+                        } else {
+                            <img height="178" width="128"/>
+                        }
+                    </td>
+                }
+            </tr>
+            <tr>
+                <td align="center">
+                    @{
+                        long playerId = ((Player)ViewData["player"]).Id;
+                        if (roundCards.ContainsKey(playerId)) {
+                            Card card = roundCards[playerId];
+                            string cardImage = string.Format("/img/card_{0}_{1}.png", card.Suit, card.Value);
+                            <img src=@cardImage class="img" />
+                        } else {
+                            <img height="178" width="128" />
+                        }
+                    }
+                </td>
+            </tr>
+            <tr>
+                @{
+                    Player currentPlayer = (Player)ViewData["player"];
+                }
+                <td colspan="3">
+                    @foreach (Card card in Model.PrivateHand) {
+                        string cardImage = string.Format("/img/card_{0}_{1}.png", card.Suit, card.Value);
+                        string cardAction = string.Format(
+                            "/Truco/Play?game={0}&playerid={1}&suit={2}&value={3}",
+                            Model.Id,
+                            currentPlayer.Id,
+                            card.Suit,
+                            card.Value);
+                        if (Model.ActivePlayer == currentPlayer.Id && !Model.RaiseAccepting) {
+                            <a href=@cardAction><img src=@cardImage class="img" border="3" width="100" height="140" /></a>
+                        } else {
+                            <img src=@cardImage class="img" border="3" width="100" height="140" />
+                        }
+                    }
+                    @if (Model.ReadyToDeal && Model.ActivePlayer != currentPlayer.Id)
+                    {
+                        @string.Format("Waiting for dealer ({0})...", Model.Players[Model.DealerPlayer].Name);
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td colspan ="3">
+                    <div class="action-bar">
+                        @if (Model.ReadyToDeal && Model.DealerPlayer == currentPlayer.Id) {
+                            string dealAction = string.Format("/Truco/Deal?game={0}&playerid={1}", Model.Id, currentPlayer.Id);
+                            <button class="btn warning" onclick="location.href='@dealAction'">Deal Cards</button>
+                        } else if (!Model.ReadyToDeal && Model.ActivePlayer == currentPlayer.Id) {
+                            string trucoActionName = "TRUCO!";
+                            string trucoAction = string.Format("/Truco/Raise?game={0}&playerid={1}", Model.Id, currentPlayer.Id);
+                            string acceptAction = string.Format("/Truco/Accept?game={0}&playerid={1}", Model.Id, currentPlayer.Id);
+                            string foldAction = string.Format("/Truco/Fold?game={0}&playerid={1}", Model.Id, currentPlayer.Id);
+                            if (Model.RaiseAccepting) {
+                                if (Model.RaisedTo == 3) {
+                                    trucoActionName = "SEIS!";
+                                } else if (Model.RaisedTo == 6) {
+                                    trucoActionName = "NOVE!";
+                                } else if (Model.RaisedTo == 9) {
+                                    trucoActionName = "DOZE!";
+                                }
+                                <button class="btn success" onclick="location.href='@trucoAction'">@trucoActionName</button>
+                                <button class="btn warning" onclick="location.href='@acceptAction'">ACEITO!</button>
+                            } else if (Model.RaiseTeam == Team.None || !Model.Teams.GetValueOrDefault(Model.RaiseTeam, []).Contains(currentPlayer.Id)) {
+                                if (Model.PointsThisRound == 3) {
+                                    trucoActionName = "SEIS!";
+                                } else if (Model.PointsThisRound == 6) {
+                                    trucoActionName = "NOVE!";
+                                } else if (Model.PointsThisRound == 9) {
+                                    trucoActionName = "DOZE!";
+                                }
+                                <button class="btn success" onclick="location.href='@trucoAction'">@trucoActionName</button>
+                            }
+                            <button class="btn default" onclick="location.href='@foldAction'">DESISTO</button>
+                        }
+                    </div>
+                </td>
+            </tr>
+        </table>
+    }
+</body>

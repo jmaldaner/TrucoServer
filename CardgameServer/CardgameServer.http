@@ -1,0 +1,74 @@
+@CardgameServer_HostAddress = http://localhost:5059
+
+GET {{CardgameServer_HostAddress}}/player/3144302627708604081
+Accept: application/json
+
+###
+
+POST {{CardgameServer_HostAddress}}/player
+Content-Type: application/json
+
+{ "Name": "P1" }
+
+###
+
+POST {{CardgameServer_HostAddress}}/player
+Content-Type: application/json
+
+{ "Name": "P2" }
+
+###
+
+POST {{CardgameServer_HostAddress}}/player
+Content-Type: application/json
+
+{ "Name": "P3" }
+
+###
+
+POST {{CardgameServer_HostAddress}}/player
+Content-Type: application/json
+
+{ "Name": "P4" }
+
+###
+
+GET {{CardgameServer_HostAddress}}/player?email=P1
+Accept: application/json
+
+###
+
+POST {{CardgameServer_HostAddress}}/game/truco
+
+###
+
+GET {{CardgameServer_HostAddress}}/game/truco/8390378804929350160
+
+###
+
+GET {{CardgameServer_HostAddress}}/game/truco/6706043759589944291?playerid=7605019846601131694
+
+###
+
+POST {{CardgameServer_HostAddress}}/game/truco/8390378804929350160/join
+Content-Type: application/json
+
+{ "Id" : 8221631761981308987 }
+
+###
+
+POST {{CardgameServer_HostAddress}}/game/truco/783892596692854679/join?playerid=8922932712401848443
+
+###
+
+POST {{CardgameServer_HostAddress}}/game/truco/8390378804929350160/join?playerid=8523345388467627921
+
+###
+
+POST {{CardgameServer_HostAddress}}/game/truco/8390378804929350160/join?playerid=4405084404353215626
+
+###
+
+GET {{CardgameServer_HostAddress}}/game/truco/0
+
+###

@@ -1,5 +1,4 @@
-﻿using CardgameServer.cards;
-using CardgameServer.player;
+﻿using CardgameModel;
 
 namespace CardgameServer.game.truco
 {

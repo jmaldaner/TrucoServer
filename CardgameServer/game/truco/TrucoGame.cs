@@ -1,5 +1,5 @@
-﻿using CardgameServer.cards;
-using CardgameServer.player;
+﻿using CardgameModel;
+using CardgameModel.Truco;
 using System.Collections.Immutable;
 
 namespace CardgameServer.game.truco

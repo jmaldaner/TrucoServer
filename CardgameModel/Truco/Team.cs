@@ -1,5 +1,4 @@
-﻿namespace CardgameServer.game.truco
-{
+﻿namespace CardgameModel.Truco {
     public enum Team
     {
         None,

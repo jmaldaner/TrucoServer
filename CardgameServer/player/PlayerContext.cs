@@ -1,5 +1,6 @@
 ﻿namespace CardgameServer.player
 {
+    using CardgameModel;
     using Microsoft.EntityFrameworkCore;
 
     public class PlayerContext : DbContext

@@ -4,7 +4,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CardgameServer.cards;
+using CardgameModel;
+using CardgameModel.Truco;
+using CardgameServer;
 
 namespace CardgameServerUnitTest.cards
 {

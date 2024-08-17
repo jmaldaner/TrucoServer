@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CardgameModel\CardgameModel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Update="wwwroot\img\cardback_1_128_178.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

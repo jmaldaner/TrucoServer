@@ -1,4 +1,5 @@
-﻿using CardgameServer.cards;
+﻿using CardgameModel;
+using CardgameModel.Truco;
 using CardgameServer.player;
 using Microsoft.AspNetCore.Mvc;
 

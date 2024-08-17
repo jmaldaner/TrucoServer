@@ -1,8 +1,8 @@
-﻿namespace CardgameServer.cards
+﻿namespace CardgameServer
 {
     public class Shuffler<T> : IShuffler<T>
     {
-        private Random random = new Random(System.DateTime.Now.Millisecond);
+        private Random random = new Random(DateTime.Now.Millisecond);
 
         public void Shuffle(List<T> list)
         {

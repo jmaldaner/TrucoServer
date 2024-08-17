@@ -1,4 +1,4 @@
-﻿namespace CardgameServer.cards
+﻿namespace CardgameServer
 {
     public interface IShuffler<T>
     {

@@ -1,4 +1,4 @@
-﻿using CardgameServer.cards;
+﻿using CardgameModel;
 using CardgameServer.player;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

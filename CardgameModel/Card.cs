@@ -1,8 +1,6 @@
 ﻿using System.Collections.Immutable;
-using System.Runtime.ConstrainedExecution;
 
-namespace CardgameServer.cards
-{
+namespace CardgameModel {
     public enum Suit
     {
         NONE = 0,

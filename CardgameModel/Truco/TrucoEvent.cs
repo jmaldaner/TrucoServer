@@ -1,11 +1,8 @@
-﻿using CardgameServer.cards;
-using CardgameServer.player;
-using Microsoft.AspNetCore.Routing;
+﻿using CardgameModel;
 using System.Linq;
 using System.Text;
 
-namespace CardgameServer.game.truco
-{
+namespace CardgameModel.Truco {
     
     public enum NotificationType
     {

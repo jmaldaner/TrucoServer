@@ -1,9 +1,7 @@
-﻿using CardgameServer.cards;
-using CardgameServer.player;
+﻿using CardgameModel;
 using System.Text;
 
-namespace CardgameServer.game.truco
-{
+namespace CardgameModel.Truco {
     public class TrucoGameModel
     {
         public long Id { get; set; }

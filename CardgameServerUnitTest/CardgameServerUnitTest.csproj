@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CardgameModel\CardgameModel.csproj" />
     <ProjectReference Include="..\CardGameServer\CardgameServer.csproj" />
   </ItemGroup>
 

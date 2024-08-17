@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Numerics;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using CardgameServer.cards;
+﻿using CardgameModel;
+using CardgameModel.Truco;
+using CardgameServer;
 using CardgameServer.game;
 using CardgameServer.game.truco;
-using CardgameServer.player;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using static CardgameServerUnitTest.game.truco.TrucoGameTest;
 
 namespace CardgameServerUnitTest.game.truco
 {

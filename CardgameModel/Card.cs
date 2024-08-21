@@ -1,4 +1,8 @@
-﻿using System.Collections.Immutable;
+﻿using CardgameModel.Truco;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Security;
 
 namespace CardgameModel {
     public enum Suit
@@ -10,11 +14,18 @@ namespace CardgameModel {
         DIAMONDS = 4
     }
 
-    public readonly record struct Card(Suit Suit, int Value) : IComparable<Card>
-    {
-        public static readonly List<Suit> Suits = [Suit.DIAMONDS, Suit.SPADES, Suit.HEARTS, Suit.CLUBS];
+    public class Card : IComparable<Card> {
+        public static readonly List<Suit> Suits = new List<Suit>() { Suit.DIAMONDS, Suit.SPADES, Suit.HEARTS, Suit.CLUBS };
 
-        public static readonly Card Blank = new(Suit.NONE, 0);
+        public static readonly Card Blank = new Card(Suit.NONE, 0);
+
+        public Suit Suit { get; set; }
+        public int Value {  get; set; }
+
+        public Card(Suit Suit, int Value) {
+            this.Suit = Suit;
+            this.Value = Value;
+        }
 
         public static Card Of(string shortCode)
         {
@@ -33,51 +44,60 @@ namespace CardgameModel {
             }
         }
 
-        private static ImmutableDictionary<Suit, char> SUIT_TO_CHAR = ImmutableDictionary.CreateRange(
-            new KeyValuePair<Suit, char>[] {
-                KeyValuePair.Create(Suit.NONE, '-'),
-                KeyValuePair.Create(Suit.HEARTS, '♡'),
-                KeyValuePair.Create(Suit.SPADES, '♠'),
-                KeyValuePair.Create(Suit.DIAMONDS, '♢'),
-                KeyValuePair.Create(Suit.CLUBS, '♣')
-            });
+        private static readonly Dictionary<Suit, char> SUIT_TO_CHAR = new Dictionary<Suit, char>() {
+            { Suit.NONE, '-' },
+            { Suit.HEARTS, '♡' },
+            { Suit.SPADES, '♠' },
+            { Suit.DIAMONDS, '♢' },
+            { Suit.CLUBS, '♣' }
+        };
 
-        private static ImmutableDictionary<char, Suit> CHAR_TO_SUIT = ImmutableDictionary.CreateRange(
-            new KeyValuePair<char, Suit>[] {
-                KeyValuePair.Create('-', Suit.NONE),
-                KeyValuePair.Create('♡', Suit.HEARTS),
-                KeyValuePair.Create('♠', Suit.SPADES),
-                KeyValuePair.Create('♢', Suit.DIAMONDS),
-                KeyValuePair.Create('♣', Suit.CLUBS),
-                KeyValuePair.Create('H', Suit.HEARTS),
-                KeyValuePair.Create('S', Suit.SPADES),
-                KeyValuePair.Create('D', Suit.DIAMONDS),
-                KeyValuePair.Create('C', Suit.CLUBS),
-                KeyValuePair.Create('h', Suit.HEARTS),
-                KeyValuePair.Create('s', Suit.SPADES),
-                KeyValuePair.Create('d', Suit.DIAMONDS),
-                KeyValuePair.Create('c', Suit.CLUBS),
-            });
+        private static readonly Dictionary<char, Suit> CHAR_TO_SUIT = new Dictionary<char, Suit>() {
+            {  '-', Suit.NONE },
+            { '♡', Suit.HEARTS },
+            { '♠', Suit.SPADES },
+            { '♢', Suit.DIAMONDS },
+            { '♣', Suit.CLUBS },
+            { 'H', Suit.HEARTS },
+            { 'S', Suit.SPADES },
+            { 'D', Suit.DIAMONDS },
+            { 'C', Suit.CLUBS },
+            { 'h', Suit.HEARTS },
+            { 's', Suit.SPADES },
+            { 'd', Suit.DIAMONDS },
+            { 'c', Suit.CLUBS }
+        };
 
-        private static ImmutableDictionary<int, string> VALUE_TO_STRING = ImmutableDictionary.CreateRange(
-            new KeyValuePair<int, string>[] {
-                KeyValuePair.Create(0, "-"),
-                KeyValuePair.Create(1, "A"),
-                KeyValuePair.Create(2, "2"),
-                KeyValuePair.Create(3, "3"),
-                KeyValuePair.Create(4, "4"),
-                KeyValuePair.Create(5, "5"),
-                KeyValuePair.Create(6, "6"),
-                KeyValuePair.Create(7, "7"),
-                KeyValuePair.Create(8, "8"),
-                KeyValuePair.Create(9, "9"),
-                KeyValuePair.Create(10, "10"),
-                KeyValuePair.Create(11, "J"),
-                KeyValuePair.Create(12, "Q"),
-                KeyValuePair.Create(13, "K"),
-            });
+        private static Dictionary<int, string> VALUE_TO_STRING = new Dictionary<int, string>() {
+            { 0, "-" },
+            { 1, "A" },
+            { 2, "2" },
+            { 3, "3" },
+            { 4, "4" },
+            { 5, "5" },
+            { 6, "6" },
+            { 7, "7" },
+            { 8, "8" },
+            { 9, "9" },
+            { 10, "10" },
+            { 11, "J" },
+            { 12, "Q" },
+            { 13, "K" },
+        };
 
-        private static ImmutableDictionary<string, int> STRING_TO_VALUE = VALUE_TO_STRING.ToImmutableDictionary(x => x.Value, x => x.Key);
+        private static Dictionary<string, int> STRING_TO_VALUE = VALUE_TO_STRING.ToDictionary(x => x.Value, x => x.Key);
+
+        public override bool Equals(Object? obj) {
+            if (obj == null) return false;
+            if (obj.GetType() != this.GetType()) return false;
+            var other = (Card)obj;
+            return Suit == other.Suit
+                && Value == other.Value;
+        }
+
+        public override int GetHashCode() {
+            return Suit.GetHashCode() ^ Value.GetHashCode();
+        }
 
         public override string ToString()
         {

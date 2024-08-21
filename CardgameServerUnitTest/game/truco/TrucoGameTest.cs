@@ -182,7 +182,7 @@ namespace CardgameServerUnitTest.game.truco
                     new CallTruco(PLAYER_2.Id, 3),
                     new AcceptTruco(PLAYER_3.Id),
                     new EndRoundWinner(PLAYER_3.Id, lastRound.Cards),
-                    new EndDeal([PLAYER_1.Id, PLAYER_3.Id])
+                    new EndDeal([PLAYER_1.Id, PLAYER_3.Id], new() { { Team.TeamOne, 3 }, { Team.TeamTwo, 0 } })
                 ]);
             tgm = truco.ToModel(PLAYER_1);
             Assert.IsTrue(tgm.Scores[Team.TeamOne] == 3);
@@ -220,7 +220,7 @@ namespace CardgameServerUnitTest.game.truco
                 [
                     new CallTruco(PLAYER_2.Id, 3),
                     new Fold(PLAYER_3.Id),
-                    new EndDeal([PLAYER_2.Id, PLAYER_4.Id])
+                    new EndDeal([PLAYER_2.Id, PLAYER_4.Id], new() { { Team.TeamOne, 0 }, { Team.TeamTwo, 1 } })
                 ]);
             tgm = truco.ToModel(PLAYER_1);
             Assert.IsTrue(tgm.Scores[Team.TeamOne] == 0);
@@ -264,7 +264,7 @@ namespace CardgameServerUnitTest.game.truco
                     new CallTruco(PLAYER_3.Id, 6),
                     new AcceptTruco(PLAYER_2.Id),
                     new EndRoundWinner(PLAYER_3.Id, lastRound.Cards),
-                    new EndDeal([PLAYER_1.Id, PLAYER_3.Id])
+                    new EndDeal([PLAYER_1.Id, PLAYER_3.Id], new() { { Team.TeamOne, 6 }, { Team.TeamTwo, 0 } })
                 ]);
             tgm = truco.ToModel(PLAYER_1);
             Assert.IsTrue(tgm.Scores[Team.TeamOne] == 6);
@@ -353,13 +353,13 @@ namespace CardgameServerUnitTest.game.truco
         {
             var actual = truco.Notifications();
             var expectedIndex = 0;
-            foreach(var notification in truco.Notifications())
+            foreach(var notification in actual)
             {
                 if (notification.Id < startAt)
                 {
                     continue;
                 }
-                if (notification.PublicPart == expected[expectedIndex])
+                if (notification.PublicPart.Equals(expected[expectedIndex]))
                 {
                     if (++expectedIndex >= expected.Length)
                     {
@@ -374,7 +374,7 @@ namespace CardgameServerUnitTest.game.truco
                     "Missing expected event: started={0} expectedIndex={1}\nactual={2}\nexpected={3}",
                     startAt,
                     expectedIndex,
-                    Neat(actual, startAt),
+                    Neat(actual.Select(x => x.PublicPart).ToList(), startAt),
                     Neat(expected)));
         }
 

@@ -1,5 +1,6 @@
 ﻿using CardgameModel;
 using CardgameModel.Truco;
+using Nito.AsyncEx;
 using System.Collections.Immutable;
 
 namespace CardgameServer.game.truco
@@ -24,6 +25,8 @@ namespace CardgameServer.game.truco
         private readonly List<PrivateNotification> notifications = [];
         private Dictionary<Player, Team> teamOfPlayer = [];
         private Dictionary<Team, List<Player>> teamPlayers = [];
+
+        private readonly AsyncMonitor notificationMonitor = new AsyncMonitor();
 
         private readonly IShuffler<Card> cardShuffler;
         private readonly IShuffler<long> playerShuffler;
@@ -113,10 +116,11 @@ namespace CardgameServer.game.truco
             foreach (var player in players.Values)
             {
                 hands[player.Id] = GetFromDeck(CARDS_PER_ROUND);
-                NotifyPrivate(
-                    [player.Id],
+                NotifyPrivate([
+                    new PrivatePublicNotification([player.Id], 
                     new SetHand(player.Id, hands[player.Id].ToArray()),
-                    new SetHandPublic(player.Id, CARDS_PER_ROUND));
+                    new SetHandPublic(player.Id, CARDS_PER_ROUND))
+                ]);
             }
             dealPointsIndex = 0;
             dealRaiseAccepted = true;
@@ -140,8 +144,9 @@ namespace CardgameServer.game.truco
                 roundStartPlayer = dealWinners[currentRound - 1];
             }
             activePlayer = roundStartPlayer;
-            NotifyPublic(new StartRound(roundStartPlayer.Id));
-            NotifyPublic(new SetActivePlayer(activePlayer.Id));
+            NotifyPublic([
+                new StartRound(roundStartPlayer.Id),
+                new SetActivePlayer(activePlayer.Id)]);
             currentPlayed = 0;
             roundCards = [];
             dealRaised = Team.None;
@@ -215,8 +220,9 @@ namespace CardgameServer.game.truco
                     activePlayer = NextPlayer(activePlayer);
                 }
                 dealRaiseAccepted = false;
-                NotifyPublic(new CallTruco(actor.Id, POINTS_PER_ROUND[dealPointsIndex + 1]));
-                NotifyPublic(new SetActivePlayer(activePlayer.Id));
+                NotifyPublic([
+                    new CallTruco(actor.Id, POINTS_PER_ROUND[dealPointsIndex + 1]),
+                    new SetActivePlayer(activePlayer.Id)]);
             }
         }
 
@@ -240,8 +246,9 @@ namespace CardgameServer.game.truco
                 dealRaiseAccepted = true;
                 activePlayer = dealRaisedStartPlayer;
                 dealRaisedStartPlayer = null;
-                NotifyPublic(new AcceptTruco(actor.Id));
-                NotifyPublic(new SetActivePlayer(activePlayer.Id));
+                NotifyPublic([
+                    new AcceptTruco(actor.Id),
+                    new SetActivePlayer(activePlayer.Id)]);
             }
         }
 
@@ -267,6 +274,44 @@ namespace CardgameServer.game.truco
         public List<PrivateNotification> Notifications()
         {
             return new List<PrivateNotification>(notifications);
+        }
+
+        public async Task<IEnumerable<PublicNotification>> WaitForNotifications(CancellationTokenSource cts, Player player, int startAtIndex = 0)
+        {
+            List<PublicNotification> response = [];
+            using (notificationMonitor.Enter(cts.Token)) {
+                while (!cts.IsCancellationRequested) {
+                    for (int i = notifications.FindLastIndex(x => x.Id > startAtIndex); i < notifications.Count; i++) {
+                        if (i >= 0 && notifications[i].Id > startAtIndex) {
+                            PrivateNotification pv = notifications[i];
+                            response.Add(
+                                new PublicNotification(pv.Id, pv.PlayerIds.Contains(player.Id) ? pv.PrivatePart : pv.PublicPart));
+                        }
+                    }
+                    if (response.Count > 0) {
+                        return response;
+                    }
+                    await notificationMonitor.WaitAsync(cts.Token);
+                }
+            }
+            return response;
+        }
+
+        private void NotifyPublic(IEnumerable<TrucoNotification> notifications) {
+            NotifyPrivate(notifications.Select(x => new PrivatePublicNotification([], x, x)));
+        }
+
+        private void NotifyPublic(TrucoNotification notification) {
+            NotifyPrivate([ new PrivatePublicNotification([], notification, notification)]);
+        }
+
+        private void NotifyPrivate(IEnumerable<PrivatePublicNotification> privatePublicNotifications) {
+            using (notificationMonitor.Enter()) {
+                foreach (var ppn in privatePublicNotifications) {
+                    notifications.Add(new PrivateNotification(notifications.Count, ppn.playerIds, ppn.privateNotification, ppn.publicNotification));
+                }
+                notificationMonitor.PulseAll();
+            }
         }
 
         public TrucoGameModel ToModel()
@@ -438,8 +483,9 @@ namespace CardgameServer.game.truco
             }
             if (winner != Team.None)
             {
-                NotifyPublic(new EndDeal(teamPlayers[winner].ConvertAll(x => x.Id)));
                 scores[winner] += POINTS_PER_ROUND[dealPointsIndex];
+                NotifyPublic(
+                    new EndDeal(teamPlayers[winner].ConvertAll(x => x.Id), scores));
                 if (scores[winner] >= POINTS_PER_GAME)
                 {
                     EndGame();
@@ -447,7 +493,7 @@ namespace CardgameServer.game.truco
             }
             else
             {
-                NotifyPublic(new EndDeal([]));
+                NotifyPublic(new EndDeal([], scores));
             }
             dealerPlayer = activePlayer = NextPlayer(dealerPlayer);
             readyToDeal = true;
@@ -457,19 +503,6 @@ namespace CardgameServer.game.truco
         {
             foreach (var kvp in hands) {
                 kvp.Value.Clear();
-            }
-        }
-
-        private void NotifyPublic(TrucoNotification notification)
-        {
-            NotifyPrivate([], notification, notification);
-        }
-
-        private void NotifyPrivate(List<long> playerIds, TrucoNotification privateNotification, TrucoNotification publicNotification)
-        {
-            lock (notifications)
-            {
-                notifications.Add(new PrivateNotification(notifications.Count, playerIds, privateNotification, publicNotification));
             }
         }
 
@@ -608,6 +641,8 @@ namespace CardgameServer.game.truco
                 builder.Add(new Card(s, value), rank);
             }
         }
+
+        internal record PrivatePublicNotification(List<long> playerIds, TrucoNotification privateNotification, TrucoNotification publicNotification);
     }
 }
 

@@ -1,4 +1,4 @@
-﻿using CardgameModel;
+﻿using System.Collections.Generic;
 using System.Text;
 
 namespace CardgameModel.Truco {

@@ -15,13 +15,13 @@ namespace CardgameServer.game.truco
         private static readonly int[] POINTS_PER_ROUND = [1, 3, 6, 9, 12];
 
         private List<Card>? deck;
-        private Dictionary<long, Player> players = [];
-        private List<long> seating = [];
+        private Dictionary<int, Player> players = [];
+        private List<int> seating = [];
         private readonly Dictionary<Team, int> scores =
             new Dictionary<Team, int>() {
                 { Team.TeamOne, 0 },
                 { Team.TeamTwo, 0 } };
-        private readonly Dictionary<long, List<Card>> hands = [];
+        private readonly Dictionary<int, List<Card>> hands = [];
         private readonly List<PrivateNotification> notifications = [];
         private Dictionary<Player, Team> teamOfPlayer = [];
         private Dictionary<Team, List<Player>> teamPlayers = [];
@@ -29,7 +29,7 @@ namespace CardgameServer.game.truco
         private readonly AsyncMonitor notificationMonitor = new AsyncMonitor();
 
         private readonly IShuffler<Card> cardShuffler;
-        private readonly IShuffler<long> playerShuffler;
+        private readonly IShuffler<int> playerShuffler;
 
         private Player activePlayer;
 
@@ -42,20 +42,20 @@ namespace CardgameServer.game.truco
         private bool dealRaiseAccepted = true;
         private bool readyToDeal = false;
 
-        private Dictionary<long, Card> roundCards = [];
-        private Dictionary<long, Card> lastRoundCards = [];
+        private Dictionary<int, Card> roundCards = [];
+        private Dictionary<int, Card> lastRoundCards = [];
         private Player? lastRoundWinner;
         private Player roundStartPlayer;
         private int currentRound = -1;
         private int currentPlayed = -1;
         private Team teamFolded = Team.None;
 
-        public long Id { get; private set; }
+        public int Id { get; private set; }
 
         public TrucoGame(
-            long id,
+            int id,
             IShuffler<Card> cardShuffler,
-            IShuffler<long> playerShuffler)
+            IShuffler<int> playerShuffler)
         {
             this.Id = id;
             this.cardShuffler = cardShuffler;
@@ -93,9 +93,8 @@ namespace CardgameServer.game.truco
 
         private void Start()
         {
-            seating = new List<long>(players.Keys);
+            seating = new List<int>(players.Keys);
             playerShuffler.Shuffle(seating);
-            NotifyPublic(new StartGame(new List<Player>(players.Values), seating));
             activePlayer = dealerPlayer = roundStartPlayer = players[seating[0]];
             teamOfPlayer[players[seating[0]]] = Team.TeamOne;
             teamOfPlayer[players[seating[1]]] = Team.TeamTwo;
@@ -103,7 +102,13 @@ namespace CardgameServer.game.truco
             teamOfPlayer[players[seating[3]]] = Team.TeamTwo;
             teamPlayers.Add(Team.TeamOne, [ players[seating[0]], players[seating[2]] ]);
             teamPlayers.Add(Team.TeamTwo, [ players[seating[1]], players[seating[3]] ]);
+            NotifyPublic(
+                new StartGame(
+                    new List<Player>(players.Values),
+                    seating,
+                    teamPlayers.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ConvertAll(x => x.Id))));
             readyToDeal = true;
+            NotifyPublic(new ReadyToDeal(dealerPlayer.Id));
         }
 
         public void Deal(Player actor)
@@ -146,7 +151,7 @@ namespace CardgameServer.game.truco
             activePlayer = roundStartPlayer;
             NotifyPublic([
                 new StartRound(roundStartPlayer.Id),
-                new SetActivePlayer(activePlayer.Id)]);
+                new SetActivePlayer(activePlayer.Id, POINTS_PER_ROUND[dealPointsIndex])]);
             currentPlayed = 0;
             roundCards = [];
             dealRaised = Team.None;
@@ -172,7 +177,9 @@ namespace CardgameServer.game.truco
                     hands[activePlayer.Id].Remove(card);
                 }
                 roundCards.Add(activePlayer.Id, card);
-                NotifyPublic(new PlayCard(activePlayer.Id, card, roundCards));
+                NotifyPublic([
+                    new PlayCard(activePlayer.Id, card, roundCards),
+                    new SetHandPublic(activePlayer.Id, hands[activePlayer.Id].Count)]);
                 activePlayer = NextPlayer(activePlayer);
                 currentPlayed++;
                 if (currentPlayed >= MAX_PLAYERS)
@@ -181,7 +188,7 @@ namespace CardgameServer.game.truco
                 }
                 else
                 {
-                    NotifyPublic(new SetActivePlayer(activePlayer.Id));
+                    NotifyPublic(new SetActivePlayer(activePlayer.Id, POINTS_PER_ROUND[dealPointsIndex]));
                 }
             }
         }
@@ -221,8 +228,8 @@ namespace CardgameServer.game.truco
                 }
                 dealRaiseAccepted = false;
                 NotifyPublic([
-                    new CallTruco(actor.Id, POINTS_PER_ROUND[dealPointsIndex + 1]),
-                    new SetActivePlayer(activePlayer.Id)]);
+                    new CallTruco(actor.Id, POINTS_PER_ROUND[dealPointsIndex + 1], activePlayer.Id),
+                    new SetActivePlayer(activePlayer.Id, POINTS_PER_ROUND[dealPointsIndex])]);
             }
         }
 
@@ -247,8 +254,8 @@ namespace CardgameServer.game.truco
                 activePlayer = dealRaisedStartPlayer;
                 dealRaisedStartPlayer = null;
                 NotifyPublic([
-                    new AcceptTruco(actor.Id),
-                    new SetActivePlayer(activePlayer.Id)]);
+                    new AcceptTruco(actor.Id, POINTS_PER_ROUND[dealPointsIndex]),
+                    new SetActivePlayer(activePlayer.Id, POINTS_PER_ROUND[dealPointsIndex])]);
             }
         }
 
@@ -281,10 +288,11 @@ namespace CardgameServer.game.truco
             List<PublicNotification> response = [];
             using (notificationMonitor.Enter(cts.Token)) {
                 while (!cts.IsCancellationRequested) {
-                    for (int i = notifications.FindLastIndex(x => x.Id > startAtIndex); i < notifications.Count; i++) {
-                        if (i >= 0 && notifications[i].Id > startAtIndex) {
+                    for (int i = notifications.FindLastIndex(x => x.Id >= startAtIndex); i >= 0; i--) {
+                        if (notifications[i].Id >= startAtIndex) {
                             PrivateNotification pv = notifications[i];
-                            response.Add(
+                            response.Insert(
+                                0,
                                 new PublicNotification(pv.Id, pv.PlayerIds.Contains(player.Id) ? pv.PrivatePart : pv.PublicPart));
                         }
                     }
@@ -379,7 +387,7 @@ namespace CardgameServer.game.truco
         private void EndRound()
         {
             Player? winner = null;
-            List<long> drawnPlayerIds = [];
+            List<int> drawnPlayerIds = [];
             int maxRank = -1;
             foreach (Player player in players.Values)
             {
@@ -404,12 +412,12 @@ namespace CardgameServer.game.truco
                 // If the drawn players are of the same team, it counts as if the
                 // first player to act in that round was the winner.
                 HashSet<Team> hasDrawnPlayers = [];
-                long firstDrawnPlayerId = -1;
+                int firstDrawnPlayerId = -1;
                 int roundStartPlayerIndex = seating.IndexOf(roundStartPlayer.Id);
                 for (int i = 0; i < MAX_PLAYERS; i++)
                 {
                     int offset = (roundStartPlayerIndex + i) % MAX_PLAYERS;
-                    long offsetPlayerId = seating[offset];
+                    int offsetPlayerId = seating[offset];
                     if (drawnPlayerIds.Contains(offsetPlayerId))
                     {
                         if (firstDrawnPlayerId == -1)
@@ -428,7 +436,7 @@ namespace CardgameServer.game.truco
                 dealWinners[currentRound] = winner;
                 dealTeamWinners[currentRound] = teamOfPlayer[winner];
                 lastRoundWinner = winner;
-                NotifyPublic(new EndRoundWinner(winner.Id, roundCards));
+                NotifyPublic(new EndRoundWinner(teamOfPlayer[winner], winner.Id, roundCards));
             }
             else
             {
@@ -437,7 +445,7 @@ namespace CardgameServer.game.truco
                 lastRoundWinner = null;
                 NotifyPublic(new EndRoundDrawn(drawnPlayerIds, roundCards));
             }
-            lastRoundCards = new Dictionary<long, Card>(roundCards);
+            lastRoundCards = new Dictionary<int, Card>(roundCards);
             currentRound++;
             Dictionary<Team, int> teamWins =
                 dealWinners.FindAll(x => x != null).GroupBy(x => teamOfPlayer[x])
@@ -481,11 +489,13 @@ namespace CardgameServer.game.truco
                     }
                 }
             }
+            dealerPlayer = activePlayer = NextPlayer(dealerPlayer);
             if (winner != Team.None)
             {
                 scores[winner] += POINTS_PER_ROUND[dealPointsIndex];
-                NotifyPublic(
-                    new EndDeal(teamPlayers[winner].ConvertAll(x => x.Id), scores));
+                NotifyPublic([
+                    new EndDeal(teamPlayers[winner].ConvertAll(x => x.Id), scores),
+                    new ReadyToDeal(dealerPlayer.Id)]);
                 if (scores[winner] >= POINTS_PER_GAME)
                 {
                     EndGame();
@@ -493,9 +503,8 @@ namespace CardgameServer.game.truco
             }
             else
             {
-                NotifyPublic(new EndDeal([], scores));
+                NotifyPublic([new EndDeal([], scores), new ReadyToDeal(dealerPlayer.Id)]);
             }
-            dealerPlayer = activePlayer = NextPlayer(dealerPlayer);
             readyToDeal = true;
         }
 
@@ -642,7 +651,7 @@ namespace CardgameServer.game.truco
             }
         }
 
-        internal record PrivatePublicNotification(List<long> playerIds, TrucoNotification privateNotification, TrucoNotification publicNotification);
+        internal record PrivatePublicNotification(List<int> playerIds, TrucoNotification privateNotification, TrucoNotification publicNotification);
     }
 }
 

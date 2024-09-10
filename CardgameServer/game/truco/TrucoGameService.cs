@@ -29,7 +29,7 @@ namespace CardgameServer.game.truco
 
         // GET api/<TrucoGameService>/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TrucoGameModel>> Get(long id, [FromQuery] long? playerid)
+        public async Task<ActionResult<TrucoGameModel>> Get(int id, [FromQuery] int? playerid)
         {
             TrucoGame? game = trucoGames.Get(id);
             if (game == null)
@@ -55,8 +55,8 @@ namespace CardgameServer.game.truco
         [HttpGet("{id}/notifications")]
         public async Task<ActionResult<IEnumerable<TrucoNotification>>> GetNotifications(
                 CancellationToken userCt,
-                long id,
-                [FromQuery] long? playerid,
+                int id,
+                [FromQuery] int? playerid,
                 [FromQuery] int? startAt,
                 [FromQuery] int? timeout)
         {
@@ -92,7 +92,7 @@ namespace CardgameServer.game.truco
 
         // POST api/<TrucoGameService>/<gameid>/join
         [HttpPost("{id}/join")]
-        public async Task<ActionResult<TrucoGameModel>> JoinGame(long id, [FromBody] PlayerIdentity player)
+        public async Task<ActionResult<TrucoGameModel>> JoinGame(int id, [FromBody] PlayerIdentity player)
         {
             var gnp = await ValidateGameAndPlayer(id, player.PlayerId);
             if (gnp.Value != null) {
@@ -106,7 +106,7 @@ namespace CardgameServer.game.truco
         // POST api/<TrucoGameService>/join
         [HttpPost("join")]
         public async Task<ActionResult<TrucoGameModel>> CreateOrJoinGame([FromBody] string playerName) {
-            Player player = new Player(random.NextInt64(), playerName);
+            Player player = new Player(random.Next(), playerName);
             playerContext.Players.Add(player);
             await playerContext.SaveChangesAsync();
             var game = trucoGames.CreateOrJoin(player);
@@ -116,9 +116,9 @@ namespace CardgameServer.game.truco
         // POST api/<TrucoGameService>/play?playerid=id
         [HttpPost("{id}/play")]
         public async Task<ActionResult> PlayCard(
-            long id,
+            int id,
             [FromBody] Card card,
-            [FromQuery] long playerid)
+            [FromQuery] int playerid)
         {
             var gnp = await ValidateGameAndPlayer(id, playerid);
             if (gnp.Value != null) {
@@ -129,7 +129,63 @@ namespace CardgameServer.game.truco
             }
         }
 
-        internal async Task<ActionResult<GameAndPlayer>> ValidateGameAndPlayer(long? gameId, long? playerId) {
+        // POST api/<TrucoGameService>/deal?playerid=id
+        [HttpPost("{id}/deal")]
+        public async Task<ActionResult> Deal(
+            int id,
+            [FromQuery] int playerid) {
+            var gnp = await ValidateGameAndPlayer(id, playerid);
+            if (gnp.Value != null) {
+                gnp.Value.Game.Deal(gnp.Value.Player);
+                return NoContent();
+            } else {
+                return gnp.Result;
+            }
+        }
+
+        // POST api/<TrucoGameService>/raise?playerid=id
+        [HttpPost("{id}/raise")]
+        public async Task<ActionResult> Raise(
+            int id,
+            [FromQuery] int playerid) {
+            var gnp = await ValidateGameAndPlayer(id, playerid);
+            if (gnp.Value != null) {
+                gnp.Value.Game.Truco(gnp.Value.Player);
+                return NoContent();
+            } else {
+                return gnp.Result;
+            }
+        }
+
+        // POST api/<TrucoGameService>/accept?playerid=id
+        [HttpPost("{id}/accept")]
+        public async Task<ActionResult> Accept(
+            int id,
+            [FromQuery] int playerid) {
+            var gnp = await ValidateGameAndPlayer(id, playerid);
+            if (gnp.Value != null) {
+                gnp.Value.Game.Accept(gnp.Value.Player);
+                return NoContent();
+            } else {
+                return gnp.Result;
+            }
+        }
+
+        // POST api/<TrucoGameService>/fold?playerid=id
+        [HttpPost("{id}/fold")]
+        public async Task<ActionResult> Fold(
+            int id,
+            [FromQuery] int playerid) {
+            var gnp = await ValidateGameAndPlayer(id, playerid);
+            if (gnp.Value != null) {
+                gnp.Value.Game.Fold(gnp.Value.Player);
+                return NoContent();
+            } else {
+                return gnp.Result;
+            }
+        }
+
+        internal async Task<ActionResult<GameAndPlayer>> ValidateGameAndPlayer(int? gameId, int? playerId) {
             if (gameId == null) {
                 return BadRequest("GameId is required");
             }
@@ -147,7 +203,7 @@ namespace CardgameServer.game.truco
             return new GameAndPlayer(game, player);
         }
 
-        public record PlayerIdentity(long PlayerId);
+        public record PlayerIdentity(int PlayerId);
         internal record GameAndPlayer(TrucoGame Game, Player Player);
 
     }

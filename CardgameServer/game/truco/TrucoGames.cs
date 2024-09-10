@@ -5,12 +5,12 @@ namespace CardgameServer.game.truco
     public class TrucoGames
     {
         private readonly Random random = new Random();
-        private Dictionary<long, TrucoGame> games = [];
+        private Dictionary<int, TrucoGame> games = [];
 
         public TrucoGame Create()
         {
-            long id = random.NextInt64();
-            var game = new TrucoGame(id, new Shuffler<Card>(), new Shuffler<long>());
+            int id = random.Next();
+            var game = new TrucoGame(id, new Shuffler<Card>(), new Shuffler<int>());
             games[id] = game;
             return game;
         }
@@ -34,7 +34,7 @@ namespace CardgameServer.game.truco
             return trucoGame;
         }
 
-        public TrucoGame? Get(long id)
+        public TrucoGame? Get(int id)
         {
             return games[id];
         }

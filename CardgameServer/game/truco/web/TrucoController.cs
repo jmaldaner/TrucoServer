@@ -22,7 +22,7 @@ namespace CardgameServer.game.truco.web
             this.trucoGames = trucoGames;
         }
 
-        public async Task<IActionResult> Index([FromQuery] long? game, [FromQuery] long? playerId)
+        public async Task<IActionResult> Index([FromQuery] int? game, [FromQuery] int? playerId)
         {
             if (game == null || playerId == null)
             {
@@ -48,8 +48,8 @@ namespace CardgameServer.game.truco.web
         }
 
         public async Task<IActionResult> Deal(
-            [FromQuery] long? game,
-            [FromQuery] long? playerId)
+            [FromQuery] int? game,
+            [FromQuery] int? playerId)
         {
             if (game == null || playerId == null) {
                 return Redirect("/Truco/Login");
@@ -75,7 +75,7 @@ namespace CardgameServer.game.truco.web
             var player = await playerContext.Players.SingleOrDefaultAsync(p => p.Name == name);
             if (player == null)
             {
-                player = new Player(random.NextInt64(), name);
+                player = new Player(random.Next(), name);
                 playerContext.Players.Add(player);
                 await playerContext.SaveChangesAsync();
             }
@@ -84,8 +84,8 @@ namespace CardgameServer.game.truco.web
         }
 
         public async Task<IActionResult> Play(
-                [FromQuery] long? game,
-                [FromQuery] long? playerId,
+                [FromQuery] int? game,
+                [FromQuery] int? playerId,
                 [FromQuery] Suit? suit,
                 [FromQuery] int? value) {
             if (game == null || playerId == null || suit == null || value == null)
@@ -106,8 +106,8 @@ namespace CardgameServer.game.truco.web
         }
 
         public async Task<IActionResult> Raise(
-                [FromQuery] long? game,
-                [FromQuery] long? playerId) {
+                [FromQuery] int? game,
+                [FromQuery] int? playerId) {
             if (game == null || playerId == null) {
                 return Redirect("/Truco/Login");
             }
@@ -124,8 +124,8 @@ namespace CardgameServer.game.truco.web
         }
 
         public async Task<IActionResult> Accept(
-        [FromQuery] long? game,
-        [FromQuery] long? playerId) {
+        [FromQuery] int? game,
+        [FromQuery] int? playerId) {
             if (game == null || playerId == null) {
                 return Redirect("/Truco/Login");
             }
@@ -142,8 +142,8 @@ namespace CardgameServer.game.truco.web
         }
 
         public async Task<IActionResult> Fold(
-            [FromQuery] long? game,
-            [FromQuery] long? playerId) {
+            [FromQuery] int? game,
+            [FromQuery] int? playerId) {
             if (game == null || playerId == null) {
                 return Redirect("/Truco/Login");
             }

@@ -33,7 +33,7 @@ namespace CardgameServer.player
 
         // GET api/<PlayerService>/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Player>> Get(long id)
+        public async Task<ActionResult<Player>> Get(int id)
         {
             var player = await db.Players.FindAsync(id);
             if (player == null)
@@ -47,7 +47,7 @@ namespace CardgameServer.player
         [HttpPost]
         public async Task<ActionResult<Player>> Post([FromBody] Player player)
         {
-            player.Id = random.NextInt64();
+            player.Id = random.Next();
             db.Players.Add(player);
             await db.SaveChangesAsync();
 
@@ -56,7 +56,7 @@ namespace CardgameServer.player
 
         // PUT api/<PlayerService>/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(long id, Player player)
+        public async Task<IActionResult> Put(int id, Player player)
         {
             if (id != player.Id)
             {
@@ -99,7 +99,7 @@ namespace CardgameServer.player
             return NoContent();
         }
 
-        private bool PlayerExists(long id)
+        private bool PlayerExists(int id)
         {
             return db.Players.Any(e => e.Id == id);
         }

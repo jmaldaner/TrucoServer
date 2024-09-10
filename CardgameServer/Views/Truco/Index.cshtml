@@ -26,14 +26,14 @@
     }
     else
     {
-        Dictionary<long, Card> roundCards = Model.RoundCards != null
+        Dictionary<int, Card> roundCards = Model.RoundCards != null
             ? (Model.RoundCards.Count > 0 ? Model.RoundCards : Model.LastRound)
             : [];
 
         <table bgcolor ="gray" boder="1" width="100%">
             <tr>
                 <td align="right">
-                    @foreach (long pId in Model.Teams.GetValueOrDefault(Team.TeamOne, []))
+                    @foreach (int pId in Model.Teams.GetValueOrDefault(Team.TeamOne, []))
                     {
                         <p>@Model.Players[pId].Name</p>
                     }
@@ -62,7 +62,7 @@
                     <h1>@Model.Scores.GetValueOrDefault(Team.TeamTwo, 0)</h1>
                 </td>
                 <td align="left">
-                    @foreach (long pId in Model.Teams.GetValueOrDefault(Team.TeamTwo, []))
+                    @foreach (int pId in Model.Teams.GetValueOrDefault(Team.TeamTwo, []))
                     {
                         <p>@Model.Players[pId].Name</p>
                     }
@@ -146,7 +146,7 @@
             <tr>
                 <td align="center">
                     @{
-                        long playerId = ((Player)ViewData["player"]).Id;
+                        int playerId = ((Player)ViewData["player"]).Id;
                         if (roundCards.ContainsKey(playerId)) {
                             Card card = roundCards[playerId];
                             string cardImage = string.Format("/img/card_{0}_{1}.png", card.Suit, card.Value);

@@ -4,13 +4,13 @@ using System;
 namespace CardgameModel {
     public class Player
     {
-        public long Id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
 
-        public Player(long id, string name)
+        public Player(int Id, string Name)
         {
-            Id = id;
-            Name = name;
+            this.Id = Id;
+            this.Name = Name;
         }
 
         public override string ToString() {

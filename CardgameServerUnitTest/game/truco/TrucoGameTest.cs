@@ -9,15 +9,15 @@ namespace CardgameServerUnitTest.game.truco
     [TestClass]
     public class TrucoGameTest
     {
-        private static readonly Player PLAYER_1 = new(1, "P1");
-        private static readonly Player PLAYER_2 = new(2, "P2");
-        private static readonly Player PLAYER_3 = new(3, "P3");
-        private static readonly Player PLAYER_4 = new(4, "P4");
+        private static readonly Player PLAYER_1 = new Player(1, "P1");
+        private static readonly Player PLAYER_2 = new Player(2, "P2");
+        private static readonly Player PLAYER_3 = new Player(3, "P3");
+        private static readonly Player PLAYER_4 = new Player(4, "P4");
 
-        private static readonly List<long> SEATING = [1, 2, 3, 4];
+        private static readonly List<int> SEATING = [1, 2, 3, 4];
 
-        private static readonly Dictionary<long, Player> PLAYERS =
-            new Dictionary<long, Player>()
+        private static readonly Dictionary<int, Player> PLAYERS =
+            new Dictionary<int, Player>()
             {
                 { 1, PLAYER_1 },
                 { 2, PLAYER_2 },
@@ -25,11 +25,18 @@ namespace CardgameServerUnitTest.game.truco
                 { 4, PLAYER_4 }
             };
 
+        private static readonly Dictionary<Team, List<int>> TEAMS =
+            new Dictionary<Team, List<int>>() {
+                { Team.TeamOne, [ PLAYER_1.Id, PLAYER_3.Id] }, { Team.TeamTwo, [ PLAYER_2.Id, PLAYER_4.Id ] } };
+
+        private static readonly Dictionary<int, Team> TEAM_OF_PLAYER = new Dictionary<int, Team>() {
+            { PLAYER_1.Id, Team.TeamOne }, { PLAYER_2.Id, Team.TeamTwo }, { PLAYER_3.Id, Team.TeamOne }, { PLAYER_4.Id, Team.TeamTwo } };
+
         [TestMethod]
         [ExpectedException(typeof(GameException))]
         public void testJoinPlayersNotEnough()
         {
-            TrucoGame truco = new(0, new NoShuffler<Card>(), new NoShuffler<long>());
+            TrucoGame truco = new(0, new NoShuffler<Card>(), new NoShuffler<int>());
             truco.AddPlayer(PLAYER_1);
             truco.Play(PLAYER_1, Card.Blank);
         }
@@ -43,16 +50,16 @@ namespace CardgameServerUnitTest.game.truco
                 Card.Of("hK"), Card.Of("h2"), Card.Of("h7"),
                 Card.Of("sA"), Card.Of("sQ"), Card.Of("s2")];
             cards.Reverse();
-            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<long>(SEATING));
+            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(4, 2, "c2", 3, "hK", 4, "sA", 1, "dA"),
-                R.Of(2, 4, "sQ", 1, "d7", 2, "c4", 3, "h7")
+                R.Of(4, 1, 2, "c2", 3, "hK", 4, "sA", 1, "dA"),
+                R.Of(2, 1, 4, "sQ", 1, "d7", 2, "c4", 3, "h7")
                 ];
 
             JoinPlayers(truco);
             truco.Deal(PLAYER_1);
-            long startPlayerId = 2;
+            int startPlayerId = 2;
             foreach (R r in rounds)
             {
                 startPlayerId = DoRound(truco, startPlayerId, r);
@@ -71,19 +78,19 @@ namespace CardgameServerUnitTest.game.truco
                 Card.Of("h2"), Card.Of("h6"), Card.Of("hK"),
                 Card.Of("sQ"), Card.Of("s6"), Card.Of("sK")];
             cards.Reverse();
-            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<long>(SEATING));
+            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> round = [
-                R.Of(2, 2, "c2", 3, "hK", 4, "sQ", 1, "d6"),
-                R.Of(1, 2, "c6", 3, "h6", 4, "s6", 1, "d2"),
-                R.Of(3, 1, "dK", 2, "cK", 3, "h2", 4, "sK")];
+                R.Of(2, 1, 2, "c2", 3, "hK", 4, "sQ", 1, "d6"),
+                R.Of(1, 1, 2, "c6", 3, "h6", 4, "s6", 1, "d2"),
+                R.Of(3, 1, 1, "dK", 2, "cK", 3, "h2", 4, "sK")];
 
             JoinPlayers(truco);
             for (int i = 0; i < 2; i++)
             {
-                long dealerPlayerId = i + 1;
+                int dealerPlayerId = i + 1;
                 truco.Deal(PLAYERS[dealerPlayerId]);
-                long startPlayerId = dealerPlayerId + 1;
+                int startPlayerId = dealerPlayerId + 1;
                 foreach (R r in round)
                 {
                     startPlayerId = DoRound(truco, startPlayerId, r);
@@ -102,17 +109,17 @@ namespace CardgameServerUnitTest.game.truco
                 Card.Of("hK"), Card.Of("h2"), Card.Of("h7"),
                 Card.Of("sA"), Card.Of("sQ"), Card.Of("s2")];
             cards.Reverse();
-            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<long>(SEATING));
+            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of([2, 3], 2, "c2", 3, "h2", 4, "sQ", 1, "dA"),
-                R.Of(2, 2, "c4", 3, "hK", 4, "s2", 1, "d7")
+                R.Of([2, 3], 1, 2, "c2", 3, "h2", 4, "sQ", 1, "dA"),
+                R.Of(2, 1, 2, "c4", 3, "hK", 4, "s2", 1, "d7")
                 ];
 
             JoinPlayers(truco);
             TrucoGameModel tgm = truco.ToModel(PLAYER_1);
             truco.Deal(PLAYER_1);
-            long startPlayerId = 2;
+            int startPlayerId = 2;
             foreach (R r in rounds) {
                 startPlayerId = DoRound(truco, startPlayerId, r);
             }
@@ -129,17 +136,17 @@ namespace CardgameServerUnitTest.game.truco
                 Card.Of("hK"), Card.Of("h2"), Card.Of("h7"),
                 Card.Of("sA"), Card.Of("sQ"), Card.Of("s2")];
             cards.Reverse();
-            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<long>(SEATING));
+            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(2, 2, "c4", 3, "hK", 4, "sQ", 1, "d2"),
-                R.Of([2, 3, 4], 2, "c2", 3, "h2", 4, "s2", 1, "dA")
+                R.Of(2, 1, 2, "c4", 3, "hK", 4, "sQ", 1, "d2"),
+                R.Of([2, 3, 4], 1, 2, "c2", 3, "h2", 4, "s2", 1, "dA")
                 ];
 
             JoinPlayers(truco);
             TrucoGameModel tgm = truco.ToModel(PLAYER_1);
             truco.Deal(PLAYER_1);
-            long startPlayerId = 2;
+            int startPlayerId = 2;
             foreach (R r in rounds) {
                 startPlayerId = DoRound(truco, startPlayerId, r);
             }
@@ -156,32 +163,32 @@ namespace CardgameServerUnitTest.game.truco
                 Card.Of("hK"), Card.Of("h2"), Card.Of("h7"),
                 Card.Of("sA"), Card.Of("sQ"), Card.Of("s2")];
             cards.Reverse();
-            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<long>(SEATING));
+            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
-                R.Of(2, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
+                R.Of(1, 1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
+                R.Of(2, 1, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
                 ];
 
             JoinPlayers(truco);
             TrucoGameModel tgm = truco.ToModel(PLAYER_1);
             truco.Deal(PLAYER_1);
-            long startPlayerId = 2;
+            int startPlayerId = 2;
             foreach (R r in rounds) {
                 startPlayerId = DoRound(truco, startPlayerId, r);
             }
             int startAt = truco.Notifications().Count > 0 ? truco.Notifications().Last().Id : 0;
             truco.Truco(PLAYER_2);
             truco.Accept(PLAYER_3);
-            R lastRound = R.Of(3, 2, "cJ", 3, "h7", 4, "sA", 1, "dA");
+            R lastRound = R.Of(3, 3, 2, "cJ", 3, "h7", 4, "sA", 1, "dA");
             startPlayerId = DoRound(truco, startPlayerId, lastRound);
             ExpectPublicNotification(
                 truco,
                 startAt,
                 [
-                    new CallTruco(PLAYER_2.Id, 3),
-                    new AcceptTruco(PLAYER_3.Id),
-                    new EndRoundWinner(PLAYER_3.Id, lastRound.Cards),
+                    new CallTruco(PLAYER_2.Id, 3, PLAYER_3.Id),
+                    new AcceptTruco(PLAYER_3.Id, 3),
+                    new EndRoundWinner(Team.TeamOne, PLAYER_3.Id, lastRound.Cards),
                     new EndDeal([PLAYER_1.Id, PLAYER_3.Id], new() { { Team.TeamOne, 3 }, { Team.TeamTwo, 0 } })
                 ]);
             tgm = truco.ToModel(PLAYER_1);
@@ -197,17 +204,17 @@ namespace CardgameServerUnitTest.game.truco
                 Card.Of("hK"), Card.Of("h2"), Card.Of("h7"),
                 Card.Of("sA"), Card.Of("sQ"), Card.Of("s2")];
             cards.Reverse();
-            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<long>(SEATING));
+            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
-                R.Of(2, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
+                R.Of(1, 1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
+                R.Of(2, 1, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
                 ];
 
             JoinPlayers(truco);
             TrucoGameModel tgm = truco.ToModel(PLAYER_1);
             truco.Deal(PLAYER_1);
-            long startPlayerId = 2;
+            int startPlayerId = 2;
             foreach (R r in rounds) {
                 startPlayerId = DoRound(truco, startPlayerId, r);
             }
@@ -218,7 +225,7 @@ namespace CardgameServerUnitTest.game.truco
                 truco,
                 startAt,
                 [
-                    new CallTruco(PLAYER_2.Id, 3),
+                    new CallTruco(PLAYER_2.Id, 3, PLAYER_3.Id),
                     new Fold(PLAYER_3.Id),
                     new EndDeal([PLAYER_2.Id, PLAYER_4.Id], new() { { Team.TeamOne, 0 }, { Team.TeamTwo, 1 } })
                 ]);
@@ -236,17 +243,17 @@ namespace CardgameServerUnitTest.game.truco
                 Card.Of("hK"), Card.Of("h2"), Card.Of("h7"),
                 Card.Of("sA"), Card.Of("sQ"), Card.Of("s2")];
             cards.Reverse();
-            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<long>(SEATING));
+            TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
-                R.Of(2, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
+                R.Of(1, 1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
+                R.Of(2, 1, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
                 ];
 
             JoinPlayers(truco);
             TrucoGameModel tgm = truco.ToModel(PLAYER_1);
             truco.Deal(PLAYER_1);
-            long startPlayerId = 2;
+            int startPlayerId = 2;
             foreach (R r in rounds) {
                 startPlayerId = DoRound(truco, startPlayerId, r);
             }
@@ -254,16 +261,16 @@ namespace CardgameServerUnitTest.game.truco
             truco.Truco(PLAYER_2);
             truco.Truco(PLAYER_3);
             truco.Accept(PLAYER_2);
-            R lastRound = R.Of(3, 2, "cJ", 3, "h7", 4, "sA", 1, "dA");
+            R lastRound = R.Of(3, 6, 2, "cJ", 3, "h7", 4, "sA", 1, "dA");
             startPlayerId = DoRound(truco, startPlayerId, lastRound);
             ExpectPublicNotification(
                 truco,
                 startAt,
                 [
-                    new CallTruco(PLAYER_2.Id, 3),
-                    new CallTruco(PLAYER_3.Id, 6),
-                    new AcceptTruco(PLAYER_2.Id),
-                    new EndRoundWinner(PLAYER_3.Id, lastRound.Cards),
+                    new CallTruco(PLAYER_2.Id, 3, PLAYER_3.Id),
+                    new CallTruco(PLAYER_3.Id, 6, PLAYER_2.Id),
+                    new AcceptTruco(PLAYER_2.Id, 6),
+                    new EndRoundWinner(Team.TeamOne, PLAYER_3.Id, lastRound.Cards),
                     new EndDeal([PLAYER_1.Id, PLAYER_3.Id], new() { { Team.TeamOne, 6 }, { Team.TeamTwo, 0 } })
                 ]);
             tgm = truco.ToModel(PLAYER_1);
@@ -271,23 +278,23 @@ namespace CardgameServerUnitTest.game.truco
             Assert.IsTrue(tgm.Scores[Team.TeamTwo] == 0);
         }
 
-        private static long DoRound(TrucoGame truco, long startPlayer, R r)
+        private static int DoRound(TrucoGame truco, int startPlayer, R r)
         {
-            long currentPlayer = startPlayer;
-            Dictionary<long, Card> played = [];
+            int currentPlayer = startPlayer;
+            Dictionary<int, Card> played = [];
             int startAt = 0;
             do
             {
                 ExpectPublicNotification(
                     truco,
                     startAt,
-                    [new SetActivePlayer(currentPlayer)]);
+                    [new SetActivePlayer(currentPlayer, r.points)]);
                 Card card = r.Cards[currentPlayer];
                 played.Add(currentPlayer, card);
                 startAt = truco.Notifications().Count > 0 ? truco.Notifications().Last().Id : 0;
                 truco.Play(PLAYERS[currentPlayer], card);
                 // I'm to get the next player, player IDs are 1-based, more stable would be using generic IDs and SEATING index
-                long nextPlayer = (currentPlayer % PLAYERS.Count) + 1;
+                int nextPlayer = (currentPlayer % PLAYERS.Count) + 1;
                 ExpectPublicNotification(
                     truco,
                     startAt,
@@ -299,7 +306,7 @@ namespace CardgameServerUnitTest.game.truco
                 ExpectPublicNotification(
                     truco,
                     startAt,
-                    [new EndRoundWinner(r.Winner.Value, played)]);
+                    [new EndRoundWinner(TEAM_OF_PLAYER[r.Winner.Value], r.Winner.Value, played)]);
             }
             else if (r.Drawn != null)
             {
@@ -311,24 +318,24 @@ namespace CardgameServerUnitTest.game.truco
             return startPlayer = r.Winner.HasValue ? r.Winner.Value : startPlayer;
         }
 
-        internal record R(long? Winner, List<long>? Drawn, Dictionary<long, Card> Cards)
+        internal record R(int? Winner, List<int>? Drawn, int points, Dictionary<int, Card> Cards)
         {
-            private static Dictionary<long, Card> ProcessCardParams(params Object[] playerAndCard)
+            private static Dictionary<int, Card> ProcessCardParams(params Object[] playerAndCard)
             {
-                var cards = new Dictionary<long, Card>();
+                var cards = new Dictionary<int, Card>();
                 for (int i = 0; i < playerAndCard.Length; i += 2) {
                     cards.Add((int)playerAndCard[i], Card.Of((string)playerAndCard[i + 1]));
                 }
                 return cards;
             }
 
-            internal static R Of(long winner, params Object[] playerAndCard)
+            internal static R Of(int winner, int points, params Object[] playerAndCard)
             {
-                return new R(winner, null, ProcessCardParams(playerAndCard));
+                return new R(winner, null, points, ProcessCardParams(playerAndCard));
             }
 
-            internal static R Of(List<long> drawn, params Object[] playerAndCard) {
-                return new R(null, drawn, ProcessCardParams(playerAndCard));
+            internal static R Of(List<int> drawn, int points, params Object[] playerAndCard) {
+                return new R(null, drawn, points, ProcessCardParams(playerAndCard));
             }
         }
 
@@ -346,7 +353,7 @@ namespace CardgameServerUnitTest.game.truco
                     new AddPlayer(PLAYER_2),
                     new AddPlayer(PLAYER_3),
                     new AddPlayer(PLAYER_4),
-                    new StartGame(new List<Player>(PLAYERS.Values), SEATING)]);
+                    new StartGame(new List<Player>(PLAYERS.Values), SEATING, TEAMS)]);
         }
 
         private static void ExpectPublicNotification(TrucoGame truco, int startAt, TrucoNotification[] expected)

@@ -46,7 +46,7 @@ GET {{CardgameServer_HostAddress}}/game/truco/5805571188447856832
 
 ###
 
-GET {{CardgameServer_HostAddress}}/game/truco/6706043759589944291?playerid=7605019846601131694
+GET {{CardgameServer_HostAddress}}/game/truco/418080371?playerid=578605585
 
 ###
 
@@ -74,13 +74,24 @@ POST {{CardgameServer_HostAddress}}/game/truco
 
 ###
 
-GET {{CardgameServer_HostAddress}}/game/truco/6062678434183068621/notifications?playerid=8372017940238247702&timeout=60&startAt=0
+GET {{CardgameServer_HostAddress}}/game/truco/418080371/notifications?playerid=1220497722&timeout=60&startAt=0
 
 ###
 
 POST {{CardgameServer_HostAddress}}/game/truco/join
 Content-Type: application/json
 
-"1234"
+"4444"
+
+###
+
+GET {{CardgameServer_HostAddress}}/game/truco/418080371/notification?playerid=288314161&startat=0&timeout=10
+
+###
+
+GET {{CardgameServer_HostAddress}}/game/truco/1698182366?playerid=288314161
+###
+
+GET {{CardgameServer_HostAddress}}/game/truco/1698182366/notifications?playerid=288314161&timeout=60&startAt=0
 
 ###

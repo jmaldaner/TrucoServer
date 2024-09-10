@@ -42,11 +42,11 @@ POST {{CardgameServer_HostAddress}}/game/truco
 
 ###
 
-GET {{CardgameServer_HostAddress}}/game/truco/5805571188447856832
+GET {{CardgameServer_HostAddress}}/game/truco/107601453
 
 ###
 
-GET {{CardgameServer_HostAddress}}/game/truco/418080371?playerid=578605585
+GET {{CardgameServer_HostAddress}}/game/truco/107601453?playerid=1075994271
 
 ###
 

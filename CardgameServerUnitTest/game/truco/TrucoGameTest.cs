@@ -53,8 +53,8 @@ namespace CardgameServerUnitTest.game.truco
             TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(4, 1, 2, "c2", 3, "hK", 4, "sA", 1, "dA"),
-                R.Of(2, 1, 4, "sQ", 1, "d7", 2, "c4", 3, "h7")
+                R.Of(4, 2, "c2", 3, "hK", 4, "sA", 1, "dA"),
+                R.Of(2, 4, "sQ", 1, "d7", 2, "c4", 3, "h7")
                 ];
 
             JoinPlayers(truco);
@@ -81,9 +81,9 @@ namespace CardgameServerUnitTest.game.truco
             TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> round = [
-                R.Of(2, 1, 2, "c2", 3, "hK", 4, "sQ", 1, "d6"),
-                R.Of(1, 1, 2, "c6", 3, "h6", 4, "s6", 1, "d2"),
-                R.Of(3, 1, 1, "dK", 2, "cK", 3, "h2", 4, "sK")];
+                R.Of(2, 2, "c2", 3, "hK", 4, "sQ", 1, "d6"),
+                R.Of(1, 2, "c6", 3, "h6", 4, "s6", 1, "d2"),
+                R.Of(3, 1, "dK", 2, "cK", 3, "h2", 4, "sK")];
 
             JoinPlayers(truco);
             for (int i = 0; i < 2; i++)
@@ -112,8 +112,8 @@ namespace CardgameServerUnitTest.game.truco
             TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of([2, 3], 1, 2, "c2", 3, "h2", 4, "sQ", 1, "dA"),
-                R.Of(2, 1, 2, "c4", 3, "hK", 4, "s2", 1, "d7")
+                R.Of([2, 3], 2, "c2", 3, "h2", 4, "sQ", 1, "dA"),
+                R.Of(2, 2, "c4", 3, "hK", 4, "s2", 1, "d7")
                 ];
 
             JoinPlayers(truco);
@@ -139,8 +139,8 @@ namespace CardgameServerUnitTest.game.truco
             TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(2, 1, 2, "c4", 3, "hK", 4, "sQ", 1, "d2"),
-                R.Of([2, 3, 4], 1, 2, "c2", 3, "h2", 4, "s2", 1, "dA")
+                R.Of(2, 2, "c4", 3, "hK", 4, "sQ", 1, "d2"),
+                R.Of([2, 3, 4], 2, "c2", 3, "h2", 4, "s2", 1, "dA")
                 ];
 
             JoinPlayers(truco);
@@ -166,8 +166,8 @@ namespace CardgameServerUnitTest.game.truco
             TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(1, 1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
-                R.Of(2, 1, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
+                R.Of(1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
+                R.Of(2, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
                 ];
 
             JoinPlayers(truco);
@@ -180,7 +180,7 @@ namespace CardgameServerUnitTest.game.truco
             int startAt = truco.Notifications().Count > 0 ? truco.Notifications().Last().Id : 0;
             truco.Truco(PLAYER_2);
             truco.Accept(PLAYER_3);
-            R lastRound = R.Of(3, 3, 2, "cJ", 3, "h7", 4, "sA", 1, "dA");
+            R lastRound = R.Raised(3, [1, 3], 3, 2, "cJ", 3, "h7", 4, "sA", 1, "dA");
             startPlayerId = DoRound(truco, startPlayerId, lastRound);
             ExpectPublicNotification(
                 truco,
@@ -207,8 +207,8 @@ namespace CardgameServerUnitTest.game.truco
             TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(1, 1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
-                R.Of(2, 1, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
+                R.Of(1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
+                R.Of(2, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
                 ];
 
             JoinPlayers(truco);
@@ -246,8 +246,8 @@ namespace CardgameServerUnitTest.game.truco
             TrucoGame truco = new(0, new PrecogShuffler<Card>(cards), new PrecogShuffler<int>(SEATING));
 
             List<R> rounds = [
-                R.Of(1, 1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
-                R.Of(2, 1, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
+                R.Of(1, 2, "c2", 3, "h2", 4, "sQ", 1, "d7"),
+                R.Of(2, 1, "d2", 2, "c4", 3, "hK", 4, "s2"),
                 ];
 
             JoinPlayers(truco);
@@ -261,7 +261,7 @@ namespace CardgameServerUnitTest.game.truco
             truco.Truco(PLAYER_2);
             truco.Truco(PLAYER_3);
             truco.Accept(PLAYER_2);
-            R lastRound = R.Of(3, 6, 2, "cJ", 3, "h7", 4, "sA", 1, "dA");
+            R lastRound = R.Raised(3, [2, 4], 6, 2, "cJ", 3, "h7", 4, "sA", 1, "dA");
             startPlayerId = DoRound(truco, startPlayerId, lastRound);
             ExpectPublicNotification(
                 truco,
@@ -288,7 +288,7 @@ namespace CardgameServerUnitTest.game.truco
                 ExpectPublicNotification(
                     truco,
                     startAt,
-                    [new SetActivePlayer(currentPlayer, r.points)]);
+                    [new SetActivePlayer(currentPlayer, r.canRaise == null || r.canRaise.Contains(currentPlayer), r.points)]);
                 Card card = r.Cards[currentPlayer];
                 played.Add(currentPlayer, card);
                 startAt = truco.Notifications().Count > 0 ? truco.Notifications().Last().Id : 0;
@@ -318,7 +318,7 @@ namespace CardgameServerUnitTest.game.truco
             return startPlayer = r.Winner.HasValue ? r.Winner.Value : startPlayer;
         }
 
-        internal record R(int? Winner, List<int>? Drawn, int points, Dictionary<int, Card> Cards)
+        internal record R(int? Winner, List<int>? Drawn, List<int>? canRaise, int points, Dictionary<int, Card> Cards)
         {
             private static Dictionary<int, Card> ProcessCardParams(params Object[] playerAndCard)
             {
@@ -329,13 +329,17 @@ namespace CardgameServerUnitTest.game.truco
                 return cards;
             }
 
-            internal static R Of(int winner, int points, params Object[] playerAndCard)
+            internal static R Of(int winner, params Object[] playerAndCard)
             {
-                return new R(winner, null, points, ProcessCardParams(playerAndCard));
+                return new R(winner, null, null, 1, ProcessCardParams(playerAndCard));
             }
 
-            internal static R Of(List<int> drawn, int points, params Object[] playerAndCard) {
-                return new R(null, drawn, points, ProcessCardParams(playerAndCard));
+            internal static R Of(List<int> drawn, params Object[] playerAndCard) {
+                return new R(null, drawn, null, 1, ProcessCardParams(playerAndCard));
+            }
+
+            internal static R Raised(int winner, List<int> canRaise, int points, params Object[] playerAndCard) {
+                return new R(winner, null, canRaise, points, ProcessCardParams(playerAndCard));
             }
         }
 

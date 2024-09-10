@@ -16,6 +16,7 @@ namespace CardgameModel.Truco {
         public int Round {  get; set; }
         public int ActivePlayer { get; set; }
         public List<Card> PrivateHand {  get; set; }
+        public List<Card> PartnerHand { get; set; }
         public bool IsAcceptingPlayers { get; set; }
         public int LastRoundWinner {  get; set; }
         public bool ReadyToDeal { get; set; }

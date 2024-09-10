@@ -121,10 +121,15 @@ namespace CardgameServer.game.truco
             foreach (var player in players.Values)
             {
                 hands[player.Id] = GetFromDeck(CARDS_PER_ROUND);
+                Team team = teamOfPlayer[player];
+                List<int> notifyToIds = scores[team] < 11
+                    ? [player.Id]
+                    : teamPlayers[team].ConvertAll(x => x.Id);
                 NotifyPrivate([
-                    new PrivatePublicNotification([player.Id], 
-                    new SetHand(player.Id, hands[player.Id].ToArray()),
-                    new SetHandPublic(player.Id, CARDS_PER_ROUND))
+                    new PrivatePublicNotification(
+                        notifyToIds, 
+                        new SetHand(player.Id, hands[player.Id].ToArray()),
+                        new SetHandPublic(player.Id, CARDS_PER_ROUND))
                 ]);
             }
             dealPointsIndex = 0;
@@ -151,7 +156,7 @@ namespace CardgameServer.game.truco
             activePlayer = roundStartPlayer;
             NotifyPublic([
                 new StartRound(roundStartPlayer.Id),
-                new SetActivePlayer(activePlayer.Id, POINTS_PER_ROUND[dealPointsIndex])]);
+                new SetActivePlayer(activePlayer.Id, dealRaised != teamOfPlayer[activePlayer], POINTS_PER_ROUND[dealPointsIndex])]);
             currentPlayed = 0;
             roundCards = [];
             dealRaised = Team.None;
@@ -188,7 +193,7 @@ namespace CardgameServer.game.truco
                 }
                 else
                 {
-                    NotifyPublic(new SetActivePlayer(activePlayer.Id, POINTS_PER_ROUND[dealPointsIndex]));
+                    NotifyPublic(new SetActivePlayer(activePlayer.Id, dealRaised != teamOfPlayer[activePlayer], POINTS_PER_ROUND[dealPointsIndex]));
                 }
             }
         }
@@ -229,7 +234,7 @@ namespace CardgameServer.game.truco
                 dealRaiseAccepted = false;
                 NotifyPublic([
                     new CallTruco(actor.Id, POINTS_PER_ROUND[dealPointsIndex + 1], activePlayer.Id),
-                    new SetActivePlayer(activePlayer.Id, POINTS_PER_ROUND[dealPointsIndex])]);
+                    new SetActivePlayer(activePlayer.Id, dealRaised != teamOfPlayer[activePlayer], POINTS_PER_ROUND[dealPointsIndex])]);
             }
         }
 
@@ -255,7 +260,7 @@ namespace CardgameServer.game.truco
                 dealRaisedStartPlayer = null;
                 NotifyPublic([
                     new AcceptTruco(actor.Id, POINTS_PER_ROUND[dealPointsIndex]),
-                    new SetActivePlayer(activePlayer.Id, POINTS_PER_ROUND[dealPointsIndex])]);
+                    new SetActivePlayer(activePlayer.Id, dealRaised != teamOfPlayer[activePlayer], POINTS_PER_ROUND[dealPointsIndex])]);
             }
         }
 
@@ -356,6 +361,13 @@ namespace CardgameServer.game.truco
                     for (int i = 0; i < MAX_PLAYERS -1; i++)
                     {
                         tgm.RelativeSeating.Add(seating[(playerSeatingIndex + 1 + i) % MAX_PLAYERS]);
+                    }
+                    if (teamOfPlayer != null && scores != null) {
+                        Team team = teamOfPlayer[player];
+                        if (scores[team] == 11) {
+                            int partnerPlayerId = teamPlayers[team][0].Id == player.Id ? teamPlayers[team][1].Id : teamPlayers[team][0].Id;
+                            tgm.PartnerHand = hands.GetValueOrDefault(partnerPlayerId, []);
+                        }
                     }
                 }
                 tgm.Round = currentRound;

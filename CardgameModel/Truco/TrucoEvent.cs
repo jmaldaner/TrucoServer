@@ -547,10 +547,12 @@ namespace CardgameModel.Truco {
 
     public class SetActivePlayer : TrucoNotification {
         public int PlayerId { get; set; }
+        public bool CanRaise { get; set; }
         public int Points { get; set; }
 
-        public SetActivePlayer(int PlayerId, int PointsThisRound) : base(NotificationType.SET_ACTIVE_PLAYER) {
+        public SetActivePlayer(int PlayerId, bool CanRaise, int PointsThisRound) : base(NotificationType.SET_ACTIVE_PLAYER) {
             this.PlayerId = PlayerId;
+            this.CanRaise = CanRaise;
             this.Points = PointsThisRound;
         }
 
@@ -558,18 +560,19 @@ namespace CardgameModel.Truco {
             if (obj == null) return false;
             if (obj.GetType() != this.GetType()) return false;
             var other = (SetActivePlayer)obj;
-            return PlayerId == other.PlayerId && Points == other.Points;
+            return PlayerId == other.PlayerId && Points == other.Points && CanRaise == other.CanRaise;
         }
 
         public override int GetHashCode() {
             int hash = NotificationType.GetHashCode()
                 ^ PlayerId.GetHashCode()
+                ^ CanRaise.GetHashCode()
                 ^ Points.GetHashCode();
             return hash;
         }
 
         public override string ToString() {
-            return string.Format("SetActivePlayer {{ PlayerId={0} PointsThisRound={1} }}", PlayerId, Points);
+            return string.Format("SetActivePlayer {{ PlayerId={0} CanRaise={1} PointsThisRound={2} }}", PlayerId, CanRaise, Points);
         }
     }
 
